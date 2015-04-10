@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
 namespace RZSB.TouchpadGraphics {
@@ -45,7 +43,7 @@ namespace RZSB.TouchpadGraphics {
 
         public TPComponent GetChildAtPosition(Point p) {
             foreach (TPComponent c in children) {
-                if (c.Bounds.Contains(p)) return c;
+                if (c.Bounds.Contains(p) && c.Enabled) return c;
             }
             return null;
         }
@@ -88,10 +86,13 @@ namespace RZSB.TouchpadGraphics {
 
         protected void RedrawAllChildren(ref Graphics g) {
             foreach (TPComponent c in children) {
-                c.Draw(ref g);
-                TPPanel p = c as TPPanel;
-                if (p != null)
-                    p.RedrawAllChildren(ref g);
+                if (c.Enabled) {
+                    g.SetClip(c.Bounds);
+                    c.Draw(ref g);
+                    TPPanel p = c as TPPanel;
+                    if (p != null)
+                        p.RedrawAllChildren(ref g);
+                }
             }
         }
 

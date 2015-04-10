@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 using System.Drawing;
 using RZSB;
@@ -59,7 +57,7 @@ namespace RZSB.TouchpadGraphics {
         }
 
         void SBAPI_OnActivated() {
-            addEvent(TPEventType.NONE, 0, 0);//RequestTotalRedraw();
+            RequestTotalRedraw();
         }
 
         void SBAPI_OnTapGesture(ushort xPos, ushort yPos) {

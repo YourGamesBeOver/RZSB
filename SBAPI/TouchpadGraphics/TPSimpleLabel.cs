@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
 namespace RZSB.TouchpadGraphics {
@@ -76,6 +72,24 @@ namespace RZSB.TouchpadGraphics {
             }
         }
 
+        private bool priv_drawBackground = false;
+        public bool DrawBackground {
+            get { return priv_drawBackground; }
+            set {
+                priv_drawBackground = value;
+                RequestTotalRedraw();
+            }
+        }
+
+        //private TextAlignment priv_alignment = TextAlignment.DEFAULT;
+        //public TextAlignment Alignment {
+        //    get { return priv_alignment; }
+        //    set {
+        //        priv_alignment = value;
+        //        RequestTotalRedraw();
+        //    }
+        //}
+
         public TPSimpleLabel(Point position, string text) {
             priv_text = text;
             priv_font = GetDefaultFont();
@@ -94,8 +108,9 @@ namespace RZSB.TouchpadGraphics {
                 bounds.Height = size.Height;
                 Bounds = bounds;
                 remeasure = false;
+                Util.Utils.printf("width={0}", bounds.Width);
             }
-            g.FillRectangle(backgroundBrush, Bounds);
+            if(DrawBackground) g.FillRectangle(backgroundBrush, Bounds);
             g.DrawString(Text, TextFont, textBrush, Position);
         }
 

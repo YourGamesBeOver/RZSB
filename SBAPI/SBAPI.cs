@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Razer.SwitchbladeSDK2;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -46,6 +44,21 @@ namespace RZSB {
         DONW,
         INVALID
     }
+    [Flags]
+    public enum Gesture : uint {
+        NONE     = 0x00000000,
+        PRESS    = 0x00000001, //dwParameters(touchpoints), wXPos(coordinate), wYPos(coordinate), wZPos(reserved)
+        TAP      = 0x00000002, //dwParameters(reserved), wXPos(coordinate), wYPos(coordinate), wZPos(reserved)
+        FLICK    = 0x00000004, //dwParameters(number of touch points), wXPos(reserved), wYPos(reserved), wZPos(direction)
+        ZOOM     = 0x00000008, //dwParameters(1:zoomin, 2:zoomout), wXPos(), wYPos(), wZPos()
+        ROTATE   = 0x00000010, //dwParameters(1:clockwise 2:counterclockwise), wXPos(), wYPos(), wZPos()
+        MOVE     = 0x00000020, //dwParameters(reserved), wXPos(coordinate), wYPos(coordinate), wZPos(reserved)
+        //HOLD     = 0x00000040, //reserved
+        RELEASE  = 0x00000080, //dwParameters(touchpoints), wXPos(coordinate), wYPos(coordinate), wZPos(reserved)
+        //SCROLL   = 0x00000100, //reserved
+        ALL      = 0xFFFF
+
+    };
 
     #endregion
 
@@ -303,7 +316,13 @@ namespace RZSB {
                 }
             }
             Started = true;
-            SBMux.ReleaseMutex();
+            //clear the screens
+            //the screens actually are initalized to solid black by the drivers, but the buffers are currently filled with garbage and need to be
+            //initalized manually
+            for (int i = 0; i < NUMBER_OF_DISPLAYS; i++) {
+                ClearDisplay((SBDisplays)i);
+            }
+                SBMux.ReleaseMutex();
         }
 
         /// <summary>
@@ -421,7 +440,7 @@ namespace RZSB {
             for (int i = 0; i < NUMBER_OF_DISPLAYS; i++) {
                 Marshal.FreeHGlobal(imageDataPtrs[i]);
                 Marshal.FreeHGlobal(bufferParamsPtrs[i]);
-                bufferMuxes[i].Dispose();
+                //bufferMuxes[i].Dispose(); //doesn't compile in earlier .net versions
             }
         }
         #endregion //Display Buffer Setup
@@ -454,6 +473,31 @@ namespace RZSB {
             } else {
                 if (OnReleaseKeyboard != null) OnReleaseKeyboard();
             }
+        }
+
+        private static Gesture priv_gesturesForwardedToOS = Gesture.ALL;
+        public static Gesture GesturesForwardedToOS {
+            get { return priv_gesturesForwardedToOS; }
+            set {
+                DisableGestureForwardToOS(Gesture.ALL);
+                EnableGestureForwardToOS(value);
+            }
+        }
+
+        public static void EnableGestureForwardToOS(Gesture g) {
+            chkStrt();
+            SBMux.WaitOne();
+            RZSBSDKCheck(NativeMethods.RzSBEnableOSGesture((RZSBSDK_GESTURETYPE)g, true));
+            priv_gesturesForwardedToOS |= g;
+            SBMux.ReleaseMutex();
+        }
+
+        public static void DisableGestureForwardToOS(Gesture g) {
+            chkStrt();
+            SBMux.WaitOne();
+            RZSBSDKCheck(NativeMethods.RzSBEnableOSGesture((RZSBSDK_GESTURETYPE)g, false));
+            priv_gesturesForwardedToOS &= ~g;
+            SBMux.ReleaseMutex();
         }
 
 
@@ -565,6 +609,10 @@ namespace RZSB {
             if (rzEventType == RZSBSDK_EVENTTYPETYPE.RZSBSDK_EVENT_CLOSE) {
                 Utils.printf("[SBAPI] Close event recieved, shutting down SB connection.");
                 Stop();
+            }
+
+            if (rzEventType == RZSBSDK_EVENTTYPETYPE.RZSBSDK_EVENT_ACTIVATED) {
+                RefreshAll();
             }
 
             return RZSBSDK_HRESULT.RZSB_OK;

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
 namespace RZSB.TouchpadGraphics {
@@ -12,6 +10,10 @@ namespace RZSB.TouchpadGraphics {
         private const int TEXT_OFFSET = 3;
 
         private static TPSimpleTextField selectedTextField = null;
+        private static bool tabTransfer = false;
+
+        public delegate void OnEnterDelegate(string text);
+        public event OnEnterDelegate OnEnter;
 
         #region Font Fields
         public float FontSize {
@@ -20,7 +22,12 @@ namespace RZSB.TouchpadGraphics {
             }
             set {
                 Font oldFont = TextFont;
-                TextFont = new Font(FontName, value, TextFontStyle);
+                float newsize = value;
+                if (newsize < 0f) {
+                    newsize = 1f;
+                    AutoResizeFont = true;
+                }
+                TextFont = new Font(FontName, newsize, TextFontStyle);
                 if (oldFont != null) oldFont.Dispose();
             }
         }
@@ -109,6 +116,33 @@ namespace RZSB.TouchpadGraphics {
             protected set;
         }
 
+        private bool priv_autoResize;
+        public bool AutoResizeFont {
+            get { return priv_autoResize; }
+            set {
+                priv_autoResize = value;
+                if (!value) {
+                    FontSize = DEFAULT_FONT_SIZE;
+                } else {
+                    RequestTotalRedraw();
+                }
+            }
+
+        }
+
+        private bool priv_passwordMode = false;
+        public bool PasswordMode {
+            get { return priv_passwordMode; }
+            set {
+                if (priv_passwordMode != value) {
+                    priv_passwordMode = value;
+                    RequestTotalRedraw();
+                }
+            }
+        }
+
+        public TPSimpleTextField NextTextField = null;
+
         private Rectangle TextBounds;
         private Rectangle HighlightBounds;
 
@@ -154,26 +188,45 @@ namespace RZSB.TouchpadGraphics {
         }
 
         void SBAPI_OnKeyDown(SBAPI.VK key, IntPtr modifier) {
-            if (selectedTextField != this) return;
+            if (selectedTextField != this || tabTransfer) return;
             if (key == SBAPI.VK.BACKSPACE && Text.Length > 0) {
                 Text = Text.Substring(0, Text.Length - 1);
             } else if (key == SBAPI.VK.RETURN) {
                 if (NewlineAllowed && MoreCharactersAllowed()) Text += "\n";
+                if (OnEnter != null) OnEnter(Text);
+            } else if (key == SBAPI.VK.TAB && NextTextField != null) {
+                //Util.Utils.printf("Passing focus!");
+                selectedTextField = NextTextField;
+                RequestTotalRedraw();
+                tabTransfer = true;
             }
         }
 
         void SBAPI_OnKeyTyped(char key, IntPtr modifier) {
             if (selectedTextField != this) return;
-            if (MoreCharactersAllowed()) Text += key;
+            if (!MoreCharactersAllowed()) return;
+            if (!char.IsControl(key)) Text += key;
         }
 
         internal override void Draw(ref Graphics g) {
+            if (AutoResizeFont) {
+                priv_TextFont = Util.Utils.FindFont(g, Text, Bounds.Size, priv_TextFont);
+            }
             g.FillRectangle(backgroundBrush, Bounds);
             g.DrawRectangle(borderPen, Bounds);
             if (SBAPI.KeyboardCaptured && selectedTextField == this) {
                 g.DrawRectangle(highlightPen, HighlightBounds);
+                if (tabTransfer) tabTransfer = false;
             }
-            g.DrawString(Text, TextFont, textBrush, TextBounds);
+            string text = Text;
+            if (PasswordMode) {
+                StringBuilder b = new StringBuilder(Text.Length);
+                for (int i = 0; i < Text.Length; i++) {
+                    b.Append('*');
+                }
+                text = b.ToString();
+            }
+            g.DrawString(text, TextFont, textBrush, TextBounds);
         }
 
         protected bool MoreCharactersAllowed() {

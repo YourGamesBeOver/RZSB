@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Drawing;
 
 namespace RZSB.TouchpadGraphics {
@@ -39,12 +34,14 @@ namespace RZSB.TouchpadGraphics {
         public virtual void Disable() {
             Enabled = false;
             if (OnDisable != null) OnDisable(this);
+            RequestTotalRedraw();
         }
 
         public event TPComponentEvent OnEnable;
         public virtual void Enable() {
             Enabled = true;
             if (OnEnable != null) OnEnable(this);
+            RequestTotalRedraw();
         }
 
         public event SBAPI.XYGestureDelegate OnTap;
@@ -90,6 +87,5 @@ namespace RZSB.TouchpadGraphics {
         public const FontStyle DEFAULT_FONT_STYLE = FontStyle.Regular;
         public static Font GetDefaultFont() { return new Font(DEFAULT_FONT_NAME, DEFAULT_FONT_SIZE, DEFAULT_FONT_STYLE); }
 
-        
     }
 }

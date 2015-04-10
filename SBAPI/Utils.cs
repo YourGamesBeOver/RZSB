@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
 namespace RZSB.Util {
     internal class Utils {
@@ -43,6 +42,18 @@ namespace RZSB.Util {
         public static void println(object o, ConsoleColor foreground) {
             println(o, foreground, Console.BackgroundColor);
         }
+
+        public static Font FindFont(System.Drawing.Graphics g, string longString, Size Room, Font PreferedFont) {
+            if (String.IsNullOrWhiteSpace(longString)) return PreferedFont;
+            //you should perform some scale functions!!!
+            SizeF RealSize = g.MeasureString(longString, PreferedFont);
+            float HeightScaleRatio = Room.Height / RealSize.Height;
+            float WidthScaleRatio = Room.Width / RealSize.Width;
+            float ScaleRatio = (HeightScaleRatio < WidthScaleRatio) ? ScaleRatio = HeightScaleRatio : ScaleRatio = WidthScaleRatio;
+            float ScaleFontSize = PreferedFont.Size * ScaleRatio;
+            return new Font(PreferedFont.FontFamily, ScaleFontSize, PreferedFont.Style);
+        }
+
         internal class NativeMethods {
             [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
             internal static extern IntPtr memcpy(IntPtr dest, IntPtr src, UIntPtr count);

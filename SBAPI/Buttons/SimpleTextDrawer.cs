@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
 namespace RZSB.Buttons {
@@ -74,7 +72,7 @@ namespace RZSB.Buttons {
                         g.FillRegion(bgb, new Region(new Rectangle(0, 0, bmp.Width, bmp.Height)));
                     }
                     using (Brush textBrush = new SolidBrush(TextColor)) {
-                        Font f = FindFont(g, Text, bmp.Size, font);
+                        Font f = Util.Utils.FindFont(g, Text, bmp.Size, font);
                         SizeF size = g.MeasureString(Text, f);
                         float x = (bmp.Width - size.Width) / 2f;
                         float y = (bmp.Height - size.Height) / 2f;
@@ -93,16 +91,6 @@ namespace RZSB.Buttons {
 
             public void DrawPressed(ref Bitmap bmp) {
                 bmp = pressedBmp;
-            }
-
-            private static Font FindFont(System.Drawing.Graphics g, string longString, Size Room, Font PreferedFont) {
-                //you should perform some scale functions!!!
-                SizeF RealSize = g.MeasureString(longString, PreferedFont);
-                float HeightScaleRatio = Room.Height / RealSize.Height;
-                float WidthScaleRatio = Room.Width / RealSize.Width;
-                float ScaleRatio = (HeightScaleRatio < WidthScaleRatio) ? ScaleRatio = HeightScaleRatio : ScaleRatio = WidthScaleRatio;
-                float ScaleFontSize = PreferedFont.Size * ScaleRatio;
-                return new Font(PreferedFont.FontFamily, ScaleFontSize);
             }
 
             private static void Blur(ref Bitmap image, Int32 blurSize) {
