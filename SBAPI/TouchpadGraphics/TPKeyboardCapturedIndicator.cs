@@ -9,9 +9,15 @@ namespace RZSB.TouchpadGraphics {
         private static Rectangle staticBounds = new Rectangle(0, 0, SBAPI.TP_WIDTH, HEIGHT);
         private bool haveBeenDrawnYet = false;
 
-        public override Rectangle Bounds {
+        public override Point Position {
             get {
-                return staticBounds;
+                return staticBounds.Location;
+            }
+        }
+
+        public override Size Size {
+            get {
+                return staticBounds.Size;
             }
         }
 
@@ -40,7 +46,7 @@ namespace RZSB.TouchpadGraphics {
                 if (!haveBeenDrawnYet) {
                     label.Draw(ref g);
                     Point temp = label.Position;
-                    temp.X = (SBAPI.TP_WIDTH - label.Bounds.Width) / 2;
+                    temp.X = (SBAPI.TP_WIDTH - label.Size.Width) / 2;
                     label.Position = temp;
                     haveBeenDrawnYet = true;
                     RequestTotalRedraw();
@@ -67,9 +73,10 @@ namespace RZSB.TouchpadGraphics {
         }
 
 
-        public override void Dispose() {
-            base.Dispose();
+        protected override void DisposeManagedResources() {
+            base.DisposeManagedResources();
             label.Dispose();
-        }
+        }
+
     }
 }

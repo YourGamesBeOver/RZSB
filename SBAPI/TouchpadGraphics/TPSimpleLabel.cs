@@ -3,6 +3,28 @@ using System.Drawing;
 
 namespace RZSB.TouchpadGraphics {
     public class TPSimpleLabel : TPComponent {
+        const int DEFAULT_VERTICAL_PADDING = 4;
+        const int DEFAULT_HORIZONTAL_PADDING = 7;
+
+        private int priv_vertPad;
+        public int VerticalPadding {
+            get { return priv_vertPad; }
+            set {
+                priv_vertPad = value;
+                remeasure = true;
+                RequestTotalRedraw();
+            }
+        }
+        private int priv_horizPad;
+        public int HorizontalPadding {
+            get { return priv_horizPad; }
+            set {
+                priv_horizPad = value;
+                remeasure = true;
+                RequestTotalRedraw();
+            }
+        }
+
         private bool remeasure = true;
 
         private String priv_text = "";
@@ -95,27 +117,27 @@ namespace RZSB.TouchpadGraphics {
             priv_font = GetDefaultFont();
             textBrush = new SolidBrush(DEFAULT_FOREGROUND_COLOR);
             backgroundBrush = new SolidBrush(DEFAULT_BACKGROUND_COLOR);
-            Bounds = new Rectangle(0, 0, 0, 0);
             Position = position;
+            Size = Size.Empty;
+            VerticalPadding = DEFAULT_VERTICAL_PADDING;
+            HorizontalPadding = DEFAULT_HORIZONTAL_PADDING;
             remeasure = true;
         }
 
         internal override void Draw(ref Graphics g) {
             if (remeasure) {
-                Size size = g.MeasureString(Text, TextFont).ToSize();
-                Rectangle bounds = Bounds;
-                bounds.Width = size.Width;
-                bounds.Height = size.Height;
-                Bounds = bounds;
+                Size s = g.MeasureString(Text, TextFont).ToSize();
+                s.Width += 2 * HorizontalPadding;
+                s.Height += 2 * VerticalPadding;
+                Size = s;
                 remeasure = false;
-                Util.Utils.printf("width={0}", bounds.Width);
             }
-            if(DrawBackground) g.FillRectangle(backgroundBrush, Bounds);
-            g.DrawString(Text, TextFont, textBrush, Position);
+            if(DrawBackground) g.FillRectangle(backgroundBrush, ToRect(Size));
+            g.DrawString(Text, TextFont, textBrush, new Point(HorizontalPadding, VerticalPadding));
         }
 
-        public override void Dispose() {
-            base.Dispose();
+        protected override void DisposeManagedResources() {
+            base.DisposeManagedResources();
             textBrush.Dispose();
             TextFont.Dispose();
             backgroundBrush.Dispose();

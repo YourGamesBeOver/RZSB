@@ -146,20 +146,21 @@ namespace RZSB.TouchpadGraphics {
         private Rectangle TextBounds;
         private Rectangle HighlightBounds;
 
-        public override Rectangle Bounds {
+        public override Size Size {
             get {
-                return base.Bounds;
+                return base.Size;
             }
-            protected set {
-                base.Bounds = value;
-                TextBounds = new Rectangle(value.X + TEXT_OFFSET, value.Y + TEXT_OFFSET, value.Width - TEXT_OFFSET * 2, value.Height - TEXT_OFFSET * 2);
-                HighlightBounds = new Rectangle(value.X + HIGHLIGHT_OFFSET, value.Y + HIGHLIGHT_OFFSET, value.Width - HIGHLIGHT_OFFSET * 2, value.Height - HIGHLIGHT_OFFSET * 2);
+            set {
+                base.Size = value;
+                TextBounds = new Rectangle(TEXT_OFFSET, TEXT_OFFSET, value.Width - TEXT_OFFSET * 2, value.Height - TEXT_OFFSET * 2);
+                HighlightBounds = new Rectangle(HIGHLIGHT_OFFSET, HIGHLIGHT_OFFSET, value.Width - HIGHLIGHT_OFFSET * 2, value.Height - HIGHLIGHT_OFFSET * 2);
             }
         }
 
         public TPSimpleTextField(Rectangle bounds, Color backgroundColor, Color textColor, Color borderColor, Color highlightColor, Font font, bool newlineAllowed) {
             NewlineAllowed = newlineAllowed;
-            Bounds = bounds;
+            Size = bounds.Size;
+            Position = bounds.Location;
             priv_TextFont = font;
             backgroundBrush = new SolidBrush(backgroundColor);
             textBrush = new SolidBrush(textColor);
@@ -178,7 +179,7 @@ namespace RZSB.TouchpadGraphics {
 
         }
 
-        void TPSimpleTextField_OnTap(ushort xPos, ushort yPos) {
+        void TPSimpleTextField_OnTap(int xPos, int yPos) {
             SBAPI.KeyboardCaptured = true;
             selectedTextField = this;
         }
@@ -210,10 +211,10 @@ namespace RZSB.TouchpadGraphics {
 
         internal override void Draw(ref Graphics g) {
             if (AutoResizeFont) {
-                priv_TextFont = Util.Utils.FindFont(g, Text, Bounds.Size, priv_TextFont);
+                priv_TextFont = Util.Utils.FindFont(g, Text, Size, priv_TextFont);
             }
-            g.FillRectangle(backgroundBrush, Bounds);
-            g.DrawRectangle(borderPen, Bounds);
+            g.FillRectangle(backgroundBrush, ToRect(Size));
+            g.DrawRectangle(borderPen, ToRect(Size));
             if (SBAPI.KeyboardCaptured && selectedTextField == this) {
                 g.DrawRectangle(highlightPen, HighlightBounds);
                 if (tabTransfer) tabTransfer = false;
@@ -235,8 +236,8 @@ namespace RZSB.TouchpadGraphics {
             return false;
         }
 
-        public override void Dispose() {
-            base.Dispose();
+        protected override void DisposeManagedResources() {
+            base.DisposeManagedResources();
             backgroundBrush.Dispose();
             textBrush.Dispose();
             borderPen.Dispose();

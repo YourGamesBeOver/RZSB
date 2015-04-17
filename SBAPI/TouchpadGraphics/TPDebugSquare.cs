@@ -26,11 +26,12 @@ namespace RZSB.TouchpadGraphics {
         
 
         public TPDebugSquare(Rectangle bounds) {
-            Bounds = bounds;
+            Size = bounds.Size;
+            Position = bounds.Location;
             OnFingerOver += TPDebugSquare_OnFingerOver;
         }
 
-        void TPDebugSquare_OnFingerOver(ushort xPos, ushort yPos) {
+        void TPDebugSquare_OnFingerOver(int xPos, int yPos) {
             //Util.Utils.println("FLIP!");
             SolidBrush temp = PrimaryBrush;
             PrimaryBrush = SecondaryBrush;
@@ -38,11 +39,11 @@ namespace RZSB.TouchpadGraphics {
         }
 
         internal override void Draw(ref Graphics g) {
-            g.FillRectangle(PrimaryBrush, Bounds);
+            g.FillRectangle(PrimaryBrush, ToRect(Size));
         }
 
-        public override void Dispose() {
-            base.Dispose();
+        protected override void DisposeManagedResources() {
+            base.DisposeManagedResources();
             PrimaryBrush.Dispose();
             SecondaryBrush.Dispose();
         }

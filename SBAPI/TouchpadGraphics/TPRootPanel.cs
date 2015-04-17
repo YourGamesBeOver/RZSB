@@ -16,26 +16,26 @@ namespace RZSB.TouchpadGraphics {
         private AutoResetEvent queueReadyEvent = new AutoResetEvent(false);
 
         private Thread renderThread;
-        
 
-        public override Rectangle Bounds {
+
+        public override Point Position {
             get {
-                return ST_BOUNDS;
+                return ST_BOUNDS.Location;
             }
         }
 
-        public override TPComponent Parent {
+        public override Size Size {
+            get {
+                return ST_BOUNDS.Size;
+            }
+        }
+
+        public override TPPanel Parent {
             get {
                 return null;
             }
             internal set {
                 throw new Exception("TPRootPanel Must always be the root TPComponent!");
-            }
-        }
-
-        public override Point Position {
-            get {
-                return base.Position;
             }
         }
 
@@ -130,10 +130,10 @@ namespace RZSB.TouchpadGraphics {
                 queueMux.ReleaseMutex();
                 foreach (TPEvent e in privEventQueue) {
                     switch (e.eventType) {
-                        case TPEventType.MOVE: FingerOver(e.xPos, e.yPos); break;
-                        case TPEventType.PRESS: Pressed(e.touchpoints, e.xPos, e.yPos); break;
-                        case TPEventType.RELEASE: Released(e.touchpoints, e.xPos, e.yPos); break;
-                        case TPEventType.TAP: Tapped(e.xPos, e.yPos); break;
+                        case TPEventType.MOVE: FingerOver((int)e.xPos, (int)e.yPos); break;
+                        case TPEventType.PRESS: Pressed(e.touchpoints, (int)e.xPos, (int)e.yPos); break;
+                        case TPEventType.RELEASE: Released(e.touchpoints, (int)e.xPos, (int)e.yPos); break;
+                        case TPEventType.TAP: Tapped((int)e.xPos, (int)e.yPos); break;
                         default: break;
                     }
                 }
@@ -142,8 +142,8 @@ namespace RZSB.TouchpadGraphics {
             }
         }
 
-        public override void Dispose() {
-            base.Dispose();
+        protected override void DisposeManagedResources() {
+            base.DisposeManagedResources();
             renderThread.Abort();
         }
     }
